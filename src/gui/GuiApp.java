@@ -129,7 +129,7 @@ public class GuiApp extends JFrame {
     }
 
     public static void refreshScore(){
-        player.setScore(hand.getFirst().getValue() + hand.getLast().getValue());
+        player.refreshScore();
         scoreLabel.setText(String.valueOf(player.getScore()));
     }
 
@@ -145,6 +145,7 @@ public class GuiApp extends JFrame {
         HandCell2.revalidate();
         HandCell2.repaint();
 
+        player.setHand(hand);
         refreshScore();
 
         hand = game.getHand();
@@ -190,17 +191,22 @@ public class GuiApp extends JFrame {
 
     public static class Player{
         private int score;
-        private final ArrayList<Card> hand = new ArrayList<>(2);
+        private ArrayList<Card> hand = new ArrayList<>(2);
         public Player(int score){
             this.score = score;
         }
         public int getScore() { return score; }
+        public void refreshScore(){
+            score = 0;
+            for (Card card : hand) {
+                score += card.getValue();
+            }
+        }
         public void setScore(int score) { this.score = score; }
         public ArrayList<Card> getHand() { return hand; }
 
         public void setHand(ArrayList<Card> newHand){
-            hand.set(0, newHand.getFirst());
-            hand.set(1, newHand.getLast());
+            hand = newHand;
         }
     }
 }
