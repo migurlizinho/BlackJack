@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class Deck implements Iterable<Card>{
-    ArrayList<Card> cards;
+    private final ArrayList<Card> cards;
 
     public Deck(short size){
         cards = new ArrayList<>(size);
@@ -26,6 +26,10 @@ public class Deck implements Iterable<Card>{
 
     public Card get(int index){
         return cards.get(index);
+    }
+
+    public void remove(Card card){
+        cards.remove(card);
     }
 
     public Deck append(Card card){

@@ -1,16 +1,46 @@
 package game;
 
 import java.util.ArrayList;
-import java.util.Vector;
+import java.util.Scanner;
 
 public class App {
-    public static void main(String[] args) {
-        BlackJack game = new BlackJack();
-        ArrayList<Card> hand1 = game.getHand();
-        System.out.println(hand1);
 
-        for (Card card : game.getDeck()) {
-            System.out.println(card);
+    private static BlackJack game = new BlackJack();
+
+    public static void printInfo(){
+        System.out.println("[" + game.getDealerScore() + "]" + " Dealer :" + game.getDealerHand());
+        System.out.println("[" + game.getPlayerScore() + "]" + " Player :" + game.getPlayerHand());
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        printInfo();
+        while(true) {
+            switch (sc.nextLine()) {
+                case "h":
+                    if (game.hit()) {
+                        printInfo();
+                        System.out.println("Game Won");
+                        return;
+                    }
+                    if(game.getPlayerScore() > 21){
+                        printInfo();
+                        System.out.println("Game Lost");
+                        return;
+                    }
+                    break;
+                case "s":
+                    if (game.stand()) {
+                        printInfo();
+                        System.out.println("Game Won");
+                        return;
+                    }else{
+                        printInfo();
+                        System.out.println("Game Lost");
+                        return;
+                    }
+            }
+            printInfo();
         }
     }
 }

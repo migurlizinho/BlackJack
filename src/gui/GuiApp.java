@@ -3,10 +3,10 @@ package gui;
 import game.BlackJack;
 import game.Card;
 import game.Deck;
+import game.Player;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicBorders;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -25,11 +25,8 @@ public class GuiApp extends JFrame {
     private final static BlackJack game = new BlackJack();
     private final static int rows = 3, cols = 8;
     private final static JPanel[][] cells = new JPanel[rows][cols];
-    private static JPanel HandCell1;
-    private static JPanel HandCell2;
-    private static JPanel DealerCell1;
-    private static JPanel DealerCell2;
-    private static final Player player = new Player(0);
+    private static JPanel[] PlayerHandPanels;
+    private static JPanel[] DealerHandPanels;
     private static JLabel scoreLabel;
 
     public static void main(String[] args) {
@@ -70,14 +67,11 @@ public class GuiApp extends JFrame {
                 gamePanel.add(cells[r][c]);
             }
         }
-        HandCell1 = cells[rows - 1][0];
-        HandCell2 = cells[rows - 1][1];
-
-        DealerCell1 = cells[0][0];
-        DealerCell2 = cells[0][1];
+        PlayerHandPanels = cells[rows - 1];
+        DealerHandPanels = cells[0];
 
         cells[rows - 2][0].add(new JLabel("Score:", SwingConstants.RIGHT));
-        scoreLabel = new JLabel(String.valueOf(player.getScore()), SwingConstants.LEFT);
+        scoreLabel = new JLabel(String.valueOf(game.getPlayerScore()), SwingConstants.LEFT);
         cells[rows - 2][1].add(scoreLabel);
 
         content.add(gamePanel, BorderLayout.CENTER);
@@ -95,7 +89,9 @@ public class GuiApp extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout());
 
         JButton hitButton = new JButton("Hit");
-        hitButton.addActionListener(e -> {newHand();});
+        hitButton.addActionListener(e -> {
+            refreshPlayerHand();
+        });
         buttonPanel.add(hitButton);
 
         JButton standButton = new JButton("Stand");
@@ -105,36 +101,45 @@ public class GuiApp extends JFrame {
         buttonPanel.add(splitButton);
 
         JButton restartButton = new JButton("Restart");
-        restartButton.addActionListener(e -> {restart();});
+        restartButton.addActionListener(e -> {newHand();});
         buttonPanel.add(restartButton);
         return buttonPanel;
     }
 
     public static void restart(){
-        HandCell1.removeAll();
-        HandCell1.revalidate();
-        HandCell1.repaint();
-
-        HandCell2.removeAll();
-        HandCell2.revalidate();
-        HandCell2.repaint();
-
-        DealerCell1.removeAll();
-        DealerCell1.revalidate();
-        DealerCell1.repaint();
-
-        DealerCell2.removeAll();
-        DealerCell2.revalidate();
-        DealerCell2.repaint();
+        for (JPanel cell : PlayerHandPanels) {
+            cell.removeAll();
+            cell.revalidate();
+            cell.repaint();
+        }
+        for (JPanel cell : DealerHandPanels) {
+            cell.removeAll();
+            cell.revalidate();
+            cell.repaint();
+        }
     }
 
     public static void refreshScore(){
-        player.refreshScore();
-        scoreLabel.setText(String.valueOf(player.getScore()));
+        scoreLabel.setText(String.valueOf(game.getPlayerScore()));
+    }
+
+    public static void refreshPlayerHand(){
+        ArrayList<Card> hand = game.getPlayerHand();
+        for (int i = 0; i < PlayerHandPanels.length && i < hand.size(); i++) {
+            JPanel cell = PlayerHandPanels[i];
+            cell.removeAll();
+            cell.add(new JLabel(cards.get(hand.get(i))));
+            cell.revalidate();
+            cell.repaint();
+        }
+        refreshScore();
     }
 
     public static void newHand(){
-        ArrayList<Card> hand = game.getHand();
+        restart();
+        ArrayList<Card> hand = game.getRandHand();
+        JPanel HandCell1 = PlayerHandPanels[0];
+        JPanel HandCell2 = PlayerHandPanels[1];
         HandCell1.removeAll();
         HandCell1.add(new JLabel(cards.get(hand.getFirst())));
         HandCell1.revalidate();
@@ -145,10 +150,11 @@ public class GuiApp extends JFrame {
         HandCell2.revalidate();
         HandCell2.repaint();
 
-        player.setHand(hand);
         refreshScore();
 
-        hand = game.getHand();
+        JPanel DealerCell1 = DealerHandPanels[0];
+        JPanel DealerCell2 = DealerHandPanels[1];
+        hand = game.getRandHand();
         DealerCell1.removeAll();
         DealerCell1.add(new JLabel(cards.get(hand.getFirst())));
         DealerCell1.revalidate();
@@ -187,26 +193,5 @@ public class GuiApp extends JFrame {
         }
 
         return cards;
-    }
-
-    public static class Player{
-        private int score;
-        private ArrayList<Card> hand = new ArrayList<>(2);
-        public Player(int score){
-            this.score = score;
-        }
-        public int getScore() { return score; }
-        public void refreshScore(){
-            score = 0;
-            for (Card card : hand) {
-                score += card.getValue();
-            }
-        }
-        public void setScore(int score) { this.score = score; }
-        public ArrayList<Card> getHand() { return hand; }
-
-        public void setHand(ArrayList<Card> newHand){
-            hand = newHand;
-        }
     }
 }

@@ -5,15 +5,22 @@ import java.util.List;
 import java.util.Random;
 
 public class BlackJack {
+    public final static short BLACKJACK = 21;
     private final static short DEFAULT_DECK_SIZE = 52;
     private final Deck deck;
     private final static Random RANDOM = new Random(System.nanoTime());
+    private final Player player;
+    private final Player dealer;
 
     public final static short ROYALTY_VALUE = 10;
 
     public BlackJack(Deck deck){
         this.deck = deck;
         fillDeck();
+        player = new Player(0);
+        player.setHand(getRandHand());
+        dealer = new Player(0);
+        dealer.setHand(getRandHand());
     }
 
     public BlackJack(short deckSize){
@@ -28,7 +35,41 @@ public class BlackJack {
         return deck;
     }
 
-    public ArrayList<Card> getHand(){
+    public boolean hit() {
+        player.addCardToHand(getRandCard());
+        return player.getScore() == 21;
+    }
+
+    public boolean stand(){
+        if(dealer.getScore() > player.getScore())
+            return false;
+        while(dealer.getScore() < BLACKJACK && dealer.getScore() < player.getScore()){
+            dealer.addCardToHand(getRandCard());
+        }
+        return dealer.getScore() > BLACKJACK || dealer.getScore() < player.getScore();
+    }
+
+    public ArrayList<Card> getPlayerHand(){
+        return player.getHand();
+    }
+
+    public int getPlayerScore(){
+        return player.getScore();
+    }
+
+    public void addRandCardToPlayer(){
+        player.addCardToHand(getRandCard());
+    }
+
+    public ArrayList<Card> getDealerHand(){
+        return dealer.getHand();
+    }
+
+    public int getDealerScore(){
+        return dealer.getScore();
+    }
+
+    public ArrayList<Card> getRandHand(){
         ArrayList<Card> hand = new ArrayList<>(2);
         hand.add(deck.get(RANDOM.nextInt(deck.getLength())));
         hand.add(deck.get(RANDOM.nextInt(deck.getLength())));
@@ -36,7 +77,9 @@ public class BlackJack {
     }
 
     public Card getRandCard(){
-        return deck.get(RANDOM.nextInt(deck.getLength()));
+        Card card = deck.get(RANDOM.nextInt(deck.getLength()));
+        deck.remove(card);
+        return card;
     }
 
     private void fillDeck(){

@@ -32,6 +32,6 @@ public abstract class Card {
 
     @Override
     public String toString() {
-        return name + " : " + value + " points";
+        return name;
     }
 }

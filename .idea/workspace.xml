@@ -4,8 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dcbbd32c-1085-425c-947b-205430c13b92" name="Changes" comment="Initial">
+    <list default="true" id="dcbbd32c-1085-425c-947b-205430c13b92" name="Changes" comment="Assets">
+      <change afterPath="$PROJECT_DIR$/src/game/Player.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/game/App.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/game/App.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/game/BlackJack.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/game/BlackJack.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/game/Card.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/game/Card.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/game/Deck.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/game/Deck.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/gui/GuiApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/gui/GuiApp.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -25,6 +30,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;migurlizinho&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/migurlizinho/BlackJack&quot;,
+    &quot;accountId&quot;: &quot;073c0217-b751-4de5-806d-58845da9142e&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -53,7 +70,7 @@
       <recent name="C:\Users\migue\IdeaProjects\BlackJack\data\assets\cards" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.GuiApp">
+  <component name="RunManager" selected="Application.App">
     <configuration name="App" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="game.App" />
       <module name="BlackJack" />
@@ -82,8 +99,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.GuiApp" />
         <item itemvalue="Application.App" />
+        <item itemvalue="Application.GuiApp" />
       </list>
     </recent_temporary>
   </component>
@@ -103,12 +120,30 @@
       <option name="project" value="LOCAL" />
       <updated>1763167597921</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Player hand working">
+      <option name="closed" value="true" />
+      <created>1763167897656</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1763167897656</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Assets">
+      <option name="closed" value="true" />
+      <created>1763168157507</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1763168157507</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initial" />
+    <MESSAGE value="Player hand working" />
+    <MESSAGE value="Assets" />
+    <option name="LAST_COMMIT_MESSAGE" value="Assets" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
