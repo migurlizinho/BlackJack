@@ -3,7 +3,6 @@ package gui;
 import game.BlackJack;
 import game.Card;
 import game.Deck;
-import game.Player;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -19,37 +18,40 @@ public class GuiApp extends JFrame {
     public GuiApp(){
         setSize(1280, 720);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setResizable(false);
     }
 
-    private final static HashMap<Card, ImageIcon> cards = new HashMap<>();
+    private final static HashMap<Card, ImagePanel> cards = new HashMap<>();
     private final static BlackJack game = new BlackJack();
     private final static int rows = 3, cols = 8;
-    private final static JPanel[][] cells = new JPanel[rows][cols];
     private static JPanel[] PlayerHandPanels;
     private static JPanel[] DealerHandPanels;
-    private static JLabel scoreLabel;
+    private static JLabel playerScoreLabel;
+    private static JLabel dealerScoreLabel;
+    private static Container content;
+    private static boolean isRunning = true;
+
+    private static void messageDialog(String s, GuiApp app){
+        JOptionPane.showMessageDialog(app, s, "Game end", JOptionPane.INFORMATION_MESSAGE);
+        isRunning = false;
+    }
 
     public static void main(String[] args) {
         GuiApp app = new GuiApp();
-        Container content = app.getContentPane();
+        content = app.getContentPane();
         app.setLayout(new BorderLayout());
+        game.setDrawHandler(() -> { messageDialog("Draw", app);});
+        game.setLoseHandler(() -> { messageDialog("Lose", app);});
+        game.setWinHandler(()  -> { messageDialog("Win", app);});
 
         //-------------------GET CARDS IMAGES BUFFERED-------------------
-        ArrayList<ImageIcon> cardsIcons = null;
+        ArrayList<ImagePanel> cardsIcons = null;
         try {
             cardsIcons = getCardsImages();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        BufferedImage bf = null;
-        try {
-            bf = ImageIO.read(new File("data\\assets\\Top-Down\\Cards\\Empty-Cell-88x124.png"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        ImageIcon emptyCellIcon = new ImageIcon(bf);
-
         //------------------POPULATE CARDS MAP------------------------
         Deck deck = game.getDeck();
         for (int i = 0; i < deck.getLength(); i++) {
@@ -60,6 +62,7 @@ public class GuiApp extends JFrame {
         JPanel gamePanel = new JPanel(new GridLayout(rows, cols));
         gamePanel.setBackground(new Color(0x008080));
 
+        JPanel[][] cells = new JPanel[rows][cols];
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 cells[r][c] = new JPanel(new BorderLayout());
@@ -70,9 +73,27 @@ public class GuiApp extends JFrame {
         PlayerHandPanels = cells[rows - 1];
         DealerHandPanels = cells[0];
 
-        cells[rows - 2][0].add(new JLabel("Score:", SwingConstants.RIGHT));
-        scoreLabel = new JLabel(String.valueOf(game.getPlayerScore()), SwingConstants.LEFT);
-        cells[rows - 2][1].add(scoreLabel);
+        JPanel scoreTextPanel = new JPanel(new BorderLayout());
+        JPanel scoreValuesPanel = new JPanel(new BorderLayout());
+        scoreValuesPanel.setOpaque(false);
+        scoreTextPanel.setOpaque(false);
+        cells[1][0].add(scoreTextPanel);
+        cells[1][1].add(scoreValuesPanel);
+        Font font = new Font("JetBrains Mono", Font.BOLD, 20);
+
+        JLabel l1 = new JLabel("Your Score: ", SwingConstants.RIGHT);
+        l1.setFont(font);
+        scoreTextPanel.add(l1, BorderLayout.SOUTH);
+        playerScoreLabel = new JLabel(String.valueOf(game.getPlayerScore()), SwingConstants.LEFT);
+        playerScoreLabel.setFont(font);
+        scoreValuesPanel.add(playerScoreLabel, BorderLayout.SOUTH);
+
+        JLabel l2 = new JLabel("Dealer Score: ", SwingConstants.RIGHT);
+        l2.setFont(font);
+        scoreTextPanel.add(l2, BorderLayout.NORTH);
+        dealerScoreLabel = new JLabel(String.valueOf(game.getDealerScore()), SwingConstants.LEFT);
+        dealerScoreLabel.setFont(font);
+        scoreValuesPanel.add(dealerScoreLabel, BorderLayout.NORTH);
 
         content.add(gamePanel, BorderLayout.CENTER);
 
@@ -80,103 +101,82 @@ public class GuiApp extends JFrame {
         JPanel buttonPanel = getButtonPanel();
         content.add(buttonPanel, BorderLayout.SOUTH);
 
-        newHand();
-        app.pack();
+        refreshHands();
         app.setVisible(true);
     }
 
     private static JPanel getButtonPanel() {
         JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setPreferredSize(new Dimension(1280, 50));
 
         JButton hitButton = new JButton("Hit");
-        hitButton.addActionListener(e -> {
-            refreshPlayerHand();
+        hitButton.addActionListener((actionEvent) -> {
+            if(isRunning)
+                game.hit(GuiApp::refreshHands);
         });
+        hitButton.setPreferredSize(new Dimension(400, 40));
         buttonPanel.add(hitButton);
 
         JButton standButton = new JButton("Stand");
+        standButton.addActionListener((actionEvent) -> {
+            if(isRunning)
+                game.stand(GuiApp::refreshHands);
+        });
+        standButton.setPreferredSize(new Dimension(400, 40));
         buttonPanel.add(standButton);
 
-        JButton splitButton = new JButton("Split");
-        buttonPanel.add(splitButton);
-
         JButton restartButton = new JButton("Restart");
-        restartButton.addActionListener(e -> {newHand();});
+        restartButton.addActionListener(e -> {restart();});
+        restartButton.setPreferredSize(new Dimension(400, 40));
         buttonPanel.add(restartButton);
         return buttonPanel;
     }
 
     public static void restart(){
-        for (JPanel cell : PlayerHandPanels) {
-            cell.removeAll();
-            cell.revalidate();
-            cell.repaint();
-        }
-        for (JPanel cell : DealerHandPanels) {
-            cell.removeAll();
-            cell.revalidate();
-            cell.repaint();
-        }
+        game.restart();
+        refreshHands();
+        refreshScore();
+//        System.out.println(game.getDealerHandClone());
+//        System.out.println(game.getPlayerHandClone());
+        isRunning = true;
     }
 
     public static void refreshScore(){
-        scoreLabel.setText(String.valueOf(game.getPlayerScore()));
+        playerScoreLabel.setText(String.valueOf(game.getPlayerScore()));
+        dealerScoreLabel.setText(String.valueOf(game.getDealerScore()));
     }
 
-    public static void refreshPlayerHand(){
-        ArrayList<Card> hand = game.getPlayerHand();
-        for (int i = 0; i < PlayerHandPanels.length && i < hand.size(); i++) {
+    public static void refreshHands(){
+        ArrayList<Card> hand = (ArrayList<Card>) game.getPlayerHandClone();
+        for (int i = 0; i < PlayerHandPanels.length; i++) {
             JPanel cell = PlayerHandPanels[i];
             cell.removeAll();
-            cell.add(new JLabel(cards.get(hand.get(i))));
+            if(hand.size() > i)
+                cell.add(cards.get(hand.get(i)));
             cell.revalidate();
             cell.repaint();
         }
         refreshScore();
+        hand = (ArrayList<Card>) game.getDealerHandClone();
+        for (int i = 0; i < DealerHandPanels.length; i++) {
+            JPanel cell = DealerHandPanels[i];
+            cell.removeAll();
+            if(hand.size() > i)
+                cell.add(cards.get(hand.get(i)));
+            cell.revalidate();
+            cell.repaint();
+        }
     }
 
-    public static void newHand(){
-        restart();
-        ArrayList<Card> hand = game.getRandHand();
-        JPanel HandCell1 = PlayerHandPanels[0];
-        JPanel HandCell2 = PlayerHandPanels[1];
-        HandCell1.removeAll();
-        HandCell1.add(new JLabel(cards.get(hand.getFirst())));
-        HandCell1.revalidate();
-        HandCell1.repaint();
-
-        HandCell2.removeAll();
-        HandCell2.add(new JLabel(cards.get(hand.getLast())));
-        HandCell2.revalidate();
-        HandCell2.repaint();
-
-        refreshScore();
-
-        JPanel DealerCell1 = DealerHandPanels[0];
-        JPanel DealerCell2 = DealerHandPanels[1];
-        hand = game.getRandHand();
-        DealerCell1.removeAll();
-        DealerCell1.add(new JLabel(cards.get(hand.getFirst())));
-        DealerCell1.revalidate();
-        DealerCell1.repaint();
-
-        DealerCell2.removeAll();
-        DealerCell2.add(new JLabel(cards.get(hand.getLast())));
-        DealerCell2.revalidate();
-        DealerCell2.repaint();
-    }
-
-    public static ArrayList<ImageIcon> getCardsImages() throws IOException {
+    public static ArrayList<ImagePanel> getCardsImages() throws IOException {
         List<String> suits = List.of("Spades", "Clubs", "Diamonds", "Hearts");
-        ArrayList<ImageIcon> cards = new ArrayList<>();
-
+        ArrayList<ImagePanel> cards = new ArrayList<>();
         int cardWidth = 88;   // example values
         int cardHeight = 124;
-
         int rows = 3;
         int cols = 5;
         for(int i = 0; i < 4; i++){
-            BufferedImage sheet = ImageIO.read(new File("data\\assets\\Top-Down\\Cards\\" + suits.get(i) + "-88x124.png"));
+            BufferedImage sheet = ImageIO.read(new File("data/assets/Top-Down/Cards/" + suits.get(i) + "-88x124.png"));
             for (int y = 0; y < rows; y++) {        // rows (suits)
                 for (int x = 0; x < cols; x++) {   // columns (ranks)
                     if(y == 2 && x == 3)
@@ -187,11 +187,10 @@ public class GuiApp extends JFrame {
                             cardWidth,
                             cardHeight
                     );
-                    cards.add(new ImageIcon(card));
+                    cards.add(new ImagePanel(card));
                 }
             }
         }
-
         return cards;
     }
 }
