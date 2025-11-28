@@ -15,43 +15,30 @@ import java.util.HashMap;
 import java.util.List;
 
 public class GuiApp extends JFrame {
+    private final HashMap<Card, ImagePanel> cards = new HashMap<>();
+    private final BlackJack game = new BlackJack();
+    private final JPanel[] PlayerHandPanels;
+    private final JPanel[] DealerHandPanels;
+    private final JLabel playerScoreLabel;
+    private final JLabel dealerScoreLabel;
+    private boolean isRunning = true;
+
     public GuiApp(){
         setSize(1280, 720);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
-    }
 
-    private final static HashMap<Card, ImagePanel> cards = new HashMap<>();
-    private final static BlackJack game = new BlackJack();
-    private final static int rows = 3, cols = 8;
-    private static JPanel[] PlayerHandPanels;
-    private static JPanel[] DealerHandPanels;
-    private static JLabel playerScoreLabel;
-    private static JLabel dealerScoreLabel;
-    private static Container content;
-    private static boolean isRunning = true;
+        Container content = getContentPane();
 
-    private static void messageDialog(String s, GuiApp app){
-        JOptionPane.showMessageDialog(app, s, "Game end", JOptionPane.INFORMATION_MESSAGE);
-        isRunning = false;
-    }
-
-    public static void main(String[] args) {
-        GuiApp app = new GuiApp();
-        content = app.getContentPane();
-        app.setLayout(new BorderLayout());
-        game.setDrawHandler(() -> { messageDialog("Draw", app);});
-        game.setLoseHandler(() -> { messageDialog("Lose", app);});
-        game.setWinHandler(()  -> { messageDialog("Win", app);});
+        this.setLayout(new BorderLayout());
+        game.setDrawHandler(() -> { messageDialog("Draw", this); isRunning = false;});
+        game.setLoseHandler(() -> { messageDialog("Lose", this); isRunning = false;});
+        game.setWinHandler(()  -> { messageDialog("Win", this); isRunning = false;});
 
         //-------------------GET CARDS IMAGES BUFFERED-------------------
-        ArrayList<ImagePanel> cardsIcons = null;
-        try {
-            cardsIcons = getCardsImages();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ArrayList<ImagePanel> cardsIcons;
+        cardsIcons = getCardsImages();
         //------------------POPULATE CARDS MAP------------------------
         Deck deck = game.getDeck();
         for (int i = 0; i < deck.getLength(); i++) {
@@ -59,6 +46,8 @@ public class GuiApp extends JFrame {
         }
 
         // ----------------------GAME PANEL-------------------------
+        int cols = 8;
+        int rows = 3;
         JPanel gamePanel = new JPanel(new GridLayout(rows, cols));
         gamePanel.setBackground(new Color(0x008080));
 
@@ -98,55 +87,56 @@ public class GuiApp extends JFrame {
         content.add(gamePanel, BorderLayout.CENTER);
 
         // ----------------------BOTTOM MENU-------------------------
-        JPanel buttonPanel = getButtonPanel();
-        content.add(buttonPanel, BorderLayout.SOUTH);
-
-        refreshHands();
-        app.setVisible(true);
-    }
-
-    private static JPanel getButtonPanel() {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setPreferredSize(new Dimension(1280, 50));
 
         JButton hitButton = new JButton("Hit");
-        hitButton.addActionListener((actionEvent) -> {
+        hitButton.addActionListener((a) -> {
             if(isRunning)
-                game.hit(GuiApp::refreshHands);
+                game.hit(this::refreshHands);
         });
         hitButton.setPreferredSize(new Dimension(400, 40));
         buttonPanel.add(hitButton);
 
         JButton standButton = new JButton("Stand");
-        standButton.addActionListener((actionEvent) -> {
+        standButton.addActionListener((a) -> {
             if(isRunning)
-                game.stand(GuiApp::refreshHands);
+                game.stand(this::refreshHands);
         });
         standButton.setPreferredSize(new Dimension(400, 40));
         buttonPanel.add(standButton);
 
         JButton restartButton = new JButton("Restart");
-        restartButton.addActionListener(e -> {restart();});
+        restartButton.addActionListener(e -> restart());
         restartButton.setPreferredSize(new Dimension(400, 40));
         buttonPanel.add(restartButton);
-        return buttonPanel;
+        content.add(buttonPanel, BorderLayout.SOUTH);
+
+        refreshHands();
     }
 
-    public static void restart(){
+    private void messageDialog(String s, GuiApp app){
+        JOptionPane.showMessageDialog(app, s, "Game end", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    static void main() {
+        GuiApp app = new GuiApp();
+        app.setVisible(true);
+    }
+
+    public void restart(){
         game.restart();
         refreshHands();
         refreshScore();
-//        System.out.println(game.getDealerHandClone());
-//        System.out.println(game.getPlayerHandClone());
         isRunning = true;
     }
 
-    public static void refreshScore(){
+    public void refreshScore(){
         playerScoreLabel.setText(String.valueOf(game.getPlayerScore()));
         dealerScoreLabel.setText(String.valueOf(game.getDealerScore()));
     }
 
-    public static void refreshHands(){
+    public void refreshHands(){
         ArrayList<Card> hand = (ArrayList<Card>) game.getPlayerHandClone();
         for (int i = 0; i < PlayerHandPanels.length; i++) {
             JPanel cell = PlayerHandPanels[i];
@@ -168,27 +158,45 @@ public class GuiApp extends JFrame {
         }
     }
 
-    public static ArrayList<ImagePanel> getCardsImages() throws IOException {
+    public ArrayList<ImagePanel> getCardsImages(){
         List<String> suits = List.of("Spades", "Clubs", "Diamonds", "Hearts");
         ArrayList<ImagePanel> cards = new ArrayList<>();
         int cardWidth = 88;   // example values
         int cardHeight = 124;
         int rows = 3;
         int cols = 5;
+        BufferedImage sheet = null;
         for(int i = 0; i < 4; i++){
-            BufferedImage sheet = ImageIO.read(new File("data/assets/Top-Down/Cards/" + suits.get(i) + "-88x124.png"));
-            for (int y = 0; y < rows; y++) {        // rows (suits)
-                for (int x = 0; x < cols; x++) {   // columns (ranks)
-                    if(y == 2 && x == 3)
-                        break;
-                    BufferedImage card = sheet.getSubimage(
-                            x * cardWidth,
-                            y * cardHeight,
-                            cardWidth,
-                            cardHeight
-                    );
-                    cards.add(new ImagePanel(card));
+            try{
+                sheet = ImageIO.read(new File("data/assets/Top-Down/Cards/" + suits.get(i) + "-88x124.png"));
+                for (int y = 0; y < rows; y++) {        // rows (suits)
+                    for (int x = 0; x < cols; x++) {   // columns (ranks)
+                        if(y == 2 && x == 3)
+                            break;
+                        BufferedImage card = sheet.getSubimage(
+                                x * cardWidth,
+                                y * cardHeight,
+                                cardWidth,
+                                cardHeight
+                        );
+                        cards.add(new ImagePanel(card));
+                    }
                 }
+            }catch (IOException e){
+                String s = suits.get(i);
+                cards.add(new ImagePanel("Ace of" + s));
+                cards.add(new ImagePanel("2 of" + s));
+                cards.add(new ImagePanel("3 of" + s));
+                cards.add(new ImagePanel("4 of" + s));
+                cards.add(new ImagePanel("5 of" + s));
+                cards.add(new ImagePanel("6 of" + s));
+                cards.add(new ImagePanel("7 of" + s));
+                cards.add(new ImagePanel("8 of" + s));
+                cards.add(new ImagePanel("9 of" + s));
+                cards.add(new ImagePanel("10 of" + s));
+                cards.add(new ImagePanel("Jack of" + s));
+                cards.add(new ImagePanel("Queen of" + s));
+                cards.add(new ImagePanel("King of" + s));
             }
         }
         return cards;
